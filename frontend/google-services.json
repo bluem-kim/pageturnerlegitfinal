@@ -14,7 +14,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "668291094160-ftsnchqmc18cqb6ej1ob2ojqss0se6bc.apps.googleusercontent.com",
+          "client_id": "668291094160-5es8tjbm0dckhrcj9eqkn61coe3le78u.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.maria.pageturnerapp",
@@ -22,11 +22,27 @@
           }
         },
         {
+          "client_id": "668291094160-ftsnchqmc18cqb6ej1ob2ojqss0se6bc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.maria.pageturnerapp",
+            "certificate_hash": "89cc54c68bb4763416087502fd703f155cd2e3f5"
+          }
+        },
+        {
+          "client_id": "668291094160-ihmtb9fugebd72g43p0oh968pts49rec.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.maria.pageturnerapp",
+            "certificate_hash": "a4112549f793d4d4e1ebfe15c3d24c195d80c000"
+          }
+        },
+        {
           "client_id": "668291094160-ttvd213i9309c37n4kgnooe1cbg97qvc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.maria.pageturnerapp",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+            "certificate_hash": "c9bae6356c001681d02ea3b19ab5033697e97585"
           }
         },
         {

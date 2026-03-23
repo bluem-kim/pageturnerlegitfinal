@@ -61,8 +61,9 @@ Alternative single-var option:
 ## 🚀 Step 4: Launch!
 
 1.  Click **"Create Web Service"**.
-2.  Wait a few minutes. You will see a black screen with text (logs). 
-3.  When it says `Server is running on port 10000`, your backend is live!
+2.  Wait a few minutes, then open the **Logs** tab in Render to watch startup output.
+3.  Your backend is live when Render shows **"Your service is live"** and your app logs show something like `API running on http://0.0.0.0:<port>`.
+4.  Seeing `GET / 404` in logs is normal because this API has no `/` route. Use `/api/v1/health` to test it.
 
 ---
 
