@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "owner": "emkim",
+    "name": "pageturner",
+    "slug": "pageturner",
+    "scheme": "pageturner",
+    "newArchEnabled": true,
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "bundleIdentifier": "com.maria.pageturnerapp",
+      "supportsTablet": true
+    },
+    "android": {
+      "googleServicesFile": "./google-services.json",
+      "package": "com.maria.pageturnerapp",
+      "usesCleartextTraffic": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "googleExpoClientId": "668291094160-hf0jdjhr9m9a3js75lvur4605qud4tgn.apps.googleusercontent.com",
+      "googleWebClientId": "668291094160-hf0jdjhr9m9a3js75lvur4605qud4tgn.apps.googleusercontent.com",
+      "googleAndroidClientId": "668291094160-ttvd213i9309c37n4kgnooe1cbg97qvc.apps.googleusercontent.com",
+      "eas": {
+        "projectId": "7975d5a9-1de6-43dd-9466-38f325e7db59"
+      }
+    },
+    "jsEngine": "hermes",
+    "plugins": [
+      "expo-sqlite",
+      "expo-font",
+      "expo-notifications",
+      "@react-native-google-signin/google-signin",
+      "expo-build-properties"
+    ]
+  }
+}

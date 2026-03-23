@@ -1,0 +1,33 @@
+# EAS build ignores
+# This file tells EAS what to skip when uploading your project to the cloud.
+# If this file exists, EAS will use it INSTEAD of .gitignore.
+
+# Dependencies
+node_modules/
+
+# Build outputs and temporary files
+.expo/
+dist/
+web-build/
+
+# Environment variables
+# EAS should use the variables you set in the Expo Dashboard
+.env
+.env.local
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS files
+.DS_Store
+*.pem
+
+# Native build artifacts
+# We keep the 'android' folder itself because we pinned the versions there,
+# but we ignore the temporary build files inside it.
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
