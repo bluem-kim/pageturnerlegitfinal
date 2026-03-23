@@ -4,7 +4,7 @@ import Constants from "expo-constants";
 import { Platform } from "react-native";
 import axios from "axios";
 import baseURL from "../assets/common/baseurl";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getJwtToken } from "./sessionStorage";
 
 let registerInFlight = null;
 
@@ -64,7 +64,7 @@ export const registerDevicePushToken = async (passedToken) => {
       }
     }
 
-    const jwt = passedToken || (await AsyncStorage.getItem("jwt"));
+    const jwt = passedToken || (await getJwtToken());
     if (!jwt) {
       console.log("[Push] No JWT found, push token will not be saved to backend yet.");
       return token;
@@ -85,7 +85,11 @@ export const registerDevicePushToken = async (passedToken) => {
 
     return token;
   } catch (error) {
-    console.error("[Push] Error in registerDevicePushToken:", error.response?.data || error.message);
+    console.error(
+      "[Push] Error in registerDevicePushToken:",
+      error?.response?.status,
+      error?.response?.data || error?.message
+    );
     return null;
   }
   })();
@@ -107,7 +111,7 @@ export const removeDevicePushToken = async () => {
     : null;
   if (!tokenData?.data) return;
 
-  const jwt = await AsyncStorage.getItem("jwt");
+  const jwt = await getJwtToken();
   if (!jwt) return;
 
   try {

@@ -5,7 +5,6 @@ const OrderItem = require("../models/OrderItem");
 const Product = require("../models/Product");
 const User = require("../models/User");
 const { auth, adminOnly } = require("../middleware/auth");
-const { sendOrderEmail } = require("../utils/email");
 const { sendPushNotificationToUser } = require("../utils/pushNotifications");
 
 const router = express.Router();
@@ -197,11 +196,6 @@ router.post("/", auth, async (req, res) => {
       populate: { path: "product", model: "Product" },
     });
 
-  // Send initial order email
-  if (populated.user) {
-    sendOrderEmail(populated.user, populated, "Placed");
-  }
-
   return res.status(201).json(populated);
 });
 
@@ -237,12 +231,7 @@ router.put("/:id", auth, adminOnly, async (req, res) => {
   // Send updates
   if (updated.user) {
     const statusLabel = STATUS_LABELS[String(req.body.status)] || "Updated";
-    
-    // Async send email (don't block)
-    sendOrderEmail(updated.user, updated, statusLabel).catch(err => 
-      console.error(`[Order] Email error for user ${updated.user.email}:`, err.message)
-    );
-    
+
     // Trigger push notification
     console.log(`[Order] Triggering push for order ${updated.id} status: ${statusLabel} for ${updated.user.email}`);
     
@@ -322,13 +311,12 @@ router.post("/:id/handle-cancel-request", auth, adminOnly, async (req, res) => {
   // Send updates
   if (order.user) {
     const statusLabel = action === "approve" ? "Cancellation Approved" : "Cancellation Disapproved";
-    sendOrderEmail(order.user, order, statusLabel);
-    
+
     console.log(`[CancelRequest] Sending push notification for cancellation ${action} to ${order.user.email}`);
     sendPushNotificationToUser(
       order.user,
       "Order Update",
-      `Your cancellation request for order #${String(order.id).slice(-8).toUpperCase()} was ${action}d.`,
+      `Your cancellation request for order #${String(order.id).slice(-8).toUpperCase()} was ${statusLabel.toLowerCase()}.`,
       { type: "order", orderId: order.id }
     )
     .then(res => console.log(`[CancelRequest] Push result for ${order.user.email}:`, res))
@@ -375,8 +363,6 @@ router.post("/:id/confirm-delivered", auth, async (req, res) => {
 
   // Send updates
   if (order.user) {
-    sendOrderEmail(order.user, order, "Delivered");
-    
     console.log(`[ConfirmDelivered] Sending push notification to ${order.user.email}`);
     sendPushNotificationToUser(
       order.user,

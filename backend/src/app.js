@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const multer = require("multer");
+const mongoose = require("mongoose");
 
 const categoriesRoutes = require("./routes/categories");
 const productsRoutes = require("./routes/products");
@@ -24,7 +25,21 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.get("/api/v1/health", (req, res) => {
-  res.json({ ok: true, message: "API is healthy" });
+  const dbReady = mongoose.connection.readyState === 1;
+  res.status(dbReady ? 200 : 503).json({
+    ok: dbReady,
+    message: dbReady ? "API is healthy" : "API running but database not ready",
+    dbState: mongoose.connection.readyState,
+  });
+});
+
+app.use("/api/v1", (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Database connection is not ready yet. Please retry in a moment.",
+    });
+  }
+  return next();
 });
 
 app.use("/api/v1/categories", categoriesRoutes);

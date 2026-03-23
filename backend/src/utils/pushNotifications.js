@@ -17,6 +17,34 @@ const EXPO_STALE_TOKEN_ERRORS = new Set(["DeviceNotRegistered"]);
 
 console.log("[Push] Initializing Push Notifications Utility...");
 
+const maskToken = (token) => {
+  const value = String(token || "");
+  if (!value) return "unknown";
+  if (value.length <= 14) return value;
+  return `${value.slice(0, 8)}...${value.slice(-6)}`;
+};
+
+const summarizeFirebaseErrors = (responses, tokens) => {
+  const breakdown = {};
+  const samples = [];
+
+  (responses || []).forEach((item, idx) => {
+    const code = item?.error?.code;
+    if (!code) return;
+
+    breakdown[code] = (breakdown[code] || 0) + 1;
+    if (samples.length < 3) {
+      samples.push({
+        code,
+        token: maskToken(tokens?.[idx]),
+        message: item?.error?.message || "no-message",
+      });
+    }
+  });
+
+  return { breakdown, samples };
+};
+
 const loadServiceAccountFromEnvParts = () => {
   const projectId = String(process.env.FIREBASE_PROJECT_ID || "").trim();
   const clientEmail = String(process.env.FIREBASE_CLIENT_EMAIL || "").trim();
@@ -148,6 +176,7 @@ const removeStaleTokensFromUsers = async (tokens, reason = "unknown") => {
 };
 
 const sendExpoAndCollectInvalidTokens = async (messages, logLabel) => {
+  const startedAt = Date.now();
   const uniqueMessages = Array.from(
     new Map((messages || []).map((message) => [message.to, message])).values()
   );
@@ -173,15 +202,18 @@ const sendExpoAndCollectInvalidTokens = async (messages, logLabel) => {
       }
 
       console.warn(
-        `[Push] Expo ticket error (${logLabel}) for token ${message.to}: ${errorCode || ticket?.message || "unknown"}`
+        `[Push] Expo ticket error (${logLabel}) for token ${maskToken(message.to)}: ${errorCode || ticket?.message || "unknown"}`
       );
     } catch (error) {
       failureCount += 1;
-      console.error(`[Push] Expo error (${logLabel}) for token ${message.to}:`, error.message);
+      console.error(`[Push] Expo error (${logLabel}) for token ${maskToken(message.to)}:`, error.message);
     }
   }
 
-  console.log(`[Push] Expo response (${logLabel}): ${successCount} success, ${failureCount} failure.`);
+  const elapsedMs = Date.now() - startedAt;
+  console.log(
+    `[Push] Expo response (${logLabel}): ${successCount} success, ${failureCount} failure in ${elapsedMs}ms. Accepted by Expo means queued, not guaranteed immediate device delivery.`
+  );
   return Array.from(invalidTokens);
 };
 
@@ -189,6 +221,7 @@ const sendExpoAndCollectInvalidTokens = async (messages, logLabel) => {
  * Sends a push notification to all users with registered tokens.
  */
 const sendPushNotificationToAll = async (title, body, data = {}) => {
+  const startedAt = Date.now();
   const users = await User.find({ "pushTokens.0": { $exists: true } });
   const expoMessages = [];
   const firebaseTokens = [];
@@ -226,11 +259,20 @@ const sendPushNotificationToAll = async (title, body, data = {}) => {
       }, {}),
     };
     try {
+      const firebaseStartedAt = Date.now();
       const response = await admin.messaging().sendEachForMulticast({
         tokens: uniqueFirebaseTokens,
         ...payload,
       });
-      console.log(`[Push] Firebase response: ${response.successCount} success, ${response.failureCount} failure.`);
+      const { breakdown, samples } = summarizeFirebaseErrors(response.responses, uniqueFirebaseTokens);
+      const elapsedMs = Date.now() - firebaseStartedAt;
+      console.log(
+        `[Push] Firebase response: ${response.successCount} success, ${response.failureCount} failure in ${elapsedMs}ms.`
+      );
+      if (response.failureCount > 0) {
+        console.warn(`[Push] Firebase failure breakdown: ${JSON.stringify(breakdown)}`);
+        console.warn(`[Push] Firebase failure samples: ${JSON.stringify(samples)}`);
+      }
 
       const staleFirebaseTokens = [];
       (response.responses || []).forEach((item, idx) => {
@@ -254,6 +296,9 @@ const sendPushNotificationToAll = async (title, body, data = {}) => {
     await removeStaleTokensFromUsers(staleExpoTokens, "expo_send_failure");
   }
 
+  const totalElapsedMs = Date.now() - startedAt;
+  console.log(`[Push] Broadcast pipeline finished in ${totalElapsedMs}ms.`);
+
   return { expoCount: expoMessages.length, firebaseCount: firebaseTokens.length };
 };
 
@@ -261,6 +306,7 @@ const sendPushNotificationToAll = async (title, body, data = {}) => {
  * Sends a push notification to a specific user.
  */
 const sendPushNotificationToUser = async (user, title, body, data = {}) => {
+  const startedAt = Date.now();
   if (!user) {
     console.warn("[Push] Cannot send notification: User is null");
     return { success: false, reason: "user_null" };
@@ -323,11 +369,20 @@ const sendPushNotificationToUser = async (user, title, body, data = {}) => {
       },
     };
     try {
+      const firebaseStartedAt = Date.now();
       const response = await admin.messaging().sendEachForMulticast({
         tokens: uniqueFirebaseTokens,
         ...messagePayload,
       });
-      console.log(`[Push] Firebase response for ${user.email}: ${response.successCount} success, ${response.failureCount} failure.`);
+      const { breakdown, samples } = summarizeFirebaseErrors(response.responses, uniqueFirebaseTokens);
+      const elapsedMs = Date.now() - firebaseStartedAt;
+      console.log(
+        `[Push] Firebase response for ${user.email}: ${response.successCount} success, ${response.failureCount} failure in ${elapsedMs}ms.`
+      );
+      if (response.failureCount > 0) {
+        console.warn(`[Push] Firebase failure breakdown for ${user.email}: ${JSON.stringify(breakdown)}`);
+        console.warn(`[Push] Firebase failure samples for ${user.email}: ${JSON.stringify(samples)}`);
+      }
 
       const staleFirebaseTokens = [];
       (response.responses || []).forEach((item, idx) => {
@@ -350,6 +405,9 @@ const sendPushNotificationToUser = async (user, title, body, data = {}) => {
     const staleExpoTokens = await sendExpoAndCollectInvalidTokens(expoMessages, userEmail);
     await removeStaleTokensFromUsers(staleExpoTokens, "expo_send_failure");
   }
+
+  const totalElapsedMs = Date.now() - startedAt;
+  console.log(`[Push] Notification pipeline finished for ${userEmail} in ${totalElapsedMs}ms.`);
 
   return { success: true };
 };
