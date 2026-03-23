@@ -1,6 +1,7 @@
 {
   "name": "pageturner-monorepo",
   "version": "1.0.0",
+  "main": "frontend/index.js",
   "private": true,
   "workspaces": [
     "frontend",
