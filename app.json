@@ -1,6 +1,7 @@
 {
   "name": "pageturner",
   "slug": "pageturner",
+  "newArchEnabled": true,
   "android": {
     "package": "com.maria.pageturnerapp"
   },
