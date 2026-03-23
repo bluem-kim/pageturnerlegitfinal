@@ -6,17 +6,22 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "NODE_ENV": "production"
+      }
     },
     "preview": {
       "distribution": "internal",
       "env": {
+        "NODE_ENV": "production",
         "EXPO_PUBLIC_BASE_API_URL": "https://pageturnerlegitfinal.onrender.com/api/v1/"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
+        "NODE_ENV": "production",
         "EXPO_PUBLIC_BASE_API_URL": "https://pageturnerlegitfinal.onrender.com/api/v1/"
       }
     }
